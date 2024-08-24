@@ -1379,6 +1379,12 @@ in
               description = "Simplify the code.";
               default = true;
             };
+            language-dialect =
+              mkOption {
+                type = types.enum [ "auto" "bash" "posix" "mksh" "bats" ];
+                description = lib.mdDoc "Shell language dialect.";
+                default = "auto";
+            };
           };
         };
       };
@@ -3247,9 +3253,14 @@ lib.escapeShellArgs (lib.concatMap (ext: [ "--ghc-opt" "-X${ext}" ]) hooks.ormol
           package = tools.shfmt;
           entry =
             let
-              simplify = if hooks.shfmt.settings.simplify then "-s" else "";
+              cmdArgs =
+                mkCmdArgs
+                  (with hooks.shfmt.settings; [
+                    [ simplify "-s" ]
+                    [ true "-ln ${hooks.shfmt.settings.language-dialect}" ]
+                  ]);
             in
-            "${hooks.shfmt.package}/bin/shfmt -w -l ${simplify}";
+            "${hooks.shfmt.package}/bin/shfmt -w -l ${cmdArgs}";
         };
       single-quoted-strings =
         {
